@@ -1,0 +1,37 @@
+# Ignore Visual Studio temporary files, build results, and
+# .NET-specific folders
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# Rider/JetBrains IDE
+.idea/
+
+# Auto-generated files
+*.log
+*.vspscc
+*.vssscc
+
+# ASP.NET https dev cert
+*.pfx
+*.pem
+
+# Local secrets
+secrets.json
+
+# Others
+*.dbmdl
+*.dbproj.schemaview
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+.env
+abi_files/
