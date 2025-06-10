@@ -8,25 +8,31 @@ namespace DVotingBackendApp.dtos
         [Parameter("string", "name", 1)]
         public string Name { get; set; }
 
-        [Parameter("string", "gender", 2)]
-        public string Gender { get; set; }
+        [Parameter("string", "fatherName", 2)]
+        public string FatherName { get; set; }
 
-        [Parameter("string", "dob", 3)]
+        [Parameter("string", "imageUrl", 3)]
+        public string ImageUrl { get; set; }
+
+        [Parameter("string", "gender", 4)]
+        public string Sex { get; set; }
+
+        [Parameter("string", "dob", 5)]
         public string Dob { get; set; }
 
-        [Parameter("string", "uid", 4)]
+        [Parameter("string", "uid", 6)]
         public string Uid { get; set; }
 
-        [Parameter("string", "constituency", 5)]
+        [Parameter("string", "constituency", 7)]
         public string Constituency { get; set; }
 
-        [Parameter("string", "location", 6)]
+        [Parameter("string", "location", 8)]
         public string Location { get; set; }
 
-        [Parameter("string", "phoneNumber", 7)]
-        public string PhoneNumber { get; set; }
+        [Parameter("string", "phoneNumber", 9)]
+        public string Phone { get; set; }
 
-        [Parameter("bool", "isVoted", 8)]
+        [Parameter("bool", "isVoted", 10)]
         public bool IsVoted { get; set; }
     }
 

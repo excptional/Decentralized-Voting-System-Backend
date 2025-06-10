@@ -1,6 +1,9 @@
-﻿using DVotingBackendApp.exceptions;
+﻿using AutoMapper;
+using DVotingBackendApp.exceptions;
 using DVotingBackendApp.models;
 using DVotingBackendApp.repositories.interfaces;
+using DVotingBackendApp.requests;
+using DVotingBackendApp.responses;
 using DVotingBackendApp.services.interfaces;
 
 namespace DVotingBackendApp.services
@@ -10,48 +13,66 @@ namespace DVotingBackendApp.services
         private readonly IVoterRepository _voterRepository;
         private readonly ICandidateRepository _candidateRepository;
         private readonly IConstituencyRepository _constituencyRepository;
+        private readonly IMapper _mapper;
 
-        public VoterService(IVoterRepository voterRepository, IConstituencyRepository constituencyRepository, ICandidateRepository candidateRepository)
+        public VoterService(IVoterRepository voterRepository, IConstituencyRepository constituencyRepository, ICandidateRepository candidateRepository, IMapper mapper)
         {
             _voterRepository = voterRepository;
             _constituencyRepository = constituencyRepository;
             _candidateRepository = candidateRepository;
+            _mapper = mapper;
         }
 
-        public async Task<string> RegisterVoterAsync(Voter voter)
+        public async Task<string> RegisterVoterAsync(VoterRequest voterRequest)
         {
-            if (string.IsNullOrWhiteSpace(voter.Name) ||
-                string.IsNullOrWhiteSpace(voter.UID) ||
-                string.IsNullOrWhiteSpace(voter.Sex) ||
-                string.IsNullOrWhiteSpace(voter.Constituency) ||
-                string.IsNullOrWhiteSpace(voter.Location) ||
-                string.IsNullOrWhiteSpace(voter.Phone))
-                throw new InvalidCandidateException("Some required voter fields are missing. Please check all inputs and try again.");
-
-
-            if (voter.DOB == default || voter.DOB > DateTime.Now)
-                throw new InvalidVoterException("Invalid date of birth for voter.");
-
-            if (await _voterRepository.ExistsVoterAsync(voter.UID))
+            if (await _voterRepository.ExistsVoterAsync(voterRequest.UID))
                 throw new InvalidVoterException("Voter is already exists.");
 
-            if (!await _constituencyRepository.ExistsConstituencyAsync(voter.Constituency))
+            if (!await _constituencyRepository.ExistsConstituencyAsync(voterRequest.Constituency))
                 throw new EntityNotFoundException("Constituency is not exist. Enter valid constituency.");
+
+            var voter = _mapper.Map<Voter>(voterRequest);
 
             return await _voterRepository.RegisterVoterAsync(voter);
         }
 
-        public async Task<Voter> FetchVoterAsync(string uid)
+        public async Task<IEnumerable<VoterResponse>> FetchVotersAsync(string constituency)
         {
-            if (string.IsNullOrWhiteSpace(uid))
-                throw new InvalidVoterException("UID cannot be empty.");
+            if (string.IsNullOrWhiteSpace(constituency))
+                throw new InvalidVoterException("Constituency name must not be empty.");
 
-            var voter = await _voterRepository.FetchVoterAsync(uid);
+            var response = await _voterRepository.FetchVoterIdsAsync(constituency);
+            if (!response.Any())
+                throw new EntityNotFoundException($"No voters have been registered in the constituency '{constituency}'.");
 
-            if (voter == null)
+            //var voters = new List<VoterResponse>();
+
+            var voterTasks = response.Select(async id =>
+            {
+                var voterDto = await _voterRepository.FetchVoterAsync(id);
+
+                return _mapper.Map<VoterResponse>(voterDto);
+            });
+            var voters = await Task.WhenAll(voterTasks);
+
+            //voters.AddRange(fetchedVoters);
+
+            return voters;
+        }
+
+        public async Task<VoterResponse> FetchVoterAsync(string uid)
+        {
+            try
+            {
+                var response = await _voterRepository.FetchVoterAsync(uid);
+
+                return _mapper.Map<VoterResponse>(response);
+
+            } catch (Exception ex)
+            {
                 throw new EntityNotFoundException($"No voter found with UID: {uid}");
 
-            return voter;
+            }
         }
 
         public async Task<bool> CheckVoterValidityAsync(string uid)

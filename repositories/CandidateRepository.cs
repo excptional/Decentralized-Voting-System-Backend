@@ -25,7 +25,7 @@ namespace DVotingBackendApp.repositories
                 _web3.TransactionManager.Account.Address,
                 new Nethereum.Hex.HexTypes.HexBigInteger(900000),
                 null, null,
-                candidate.Name, candidate.Sex, DateTimeUtils.ToDateString(candidate.DOB), candidate.UID, candidate.Constituency,
+                candidate.Name, candidate.FatherName, candidate.ImageUrl, candidate.Sex, candidate.DOB, candidate.UID, candidate.Constituency,
                 candidate.Location, candidate.PoliticalAffiliation, candidate.Phone);
             return tx.TransactionHash;
         }
@@ -37,23 +37,26 @@ namespace DVotingBackendApp.repositories
             return ids;
         }
 
-        public async Task<Candidate> FetchCandidateAsync(string uid)
+        public async Task<CandidateDto> FetchCandidateAsync(string uid)
         {
             var function = _contract.GetFunction("getCandidate");
-            var result = await function.CallDeserializingToObjectAsync<CandidateOutputDto>(uid);
+            var response = await function.CallDeserializingToObjectAsync<CandidateOutputDto>(uid);
 
-            return new Candidate
-            {
-                Name = result.CandidateDto.Name,
-                Sex = result.CandidateDto.Sex,
-                DOB = DateTimeUtils.FromDateString(result.CandidateDto.DOB),
-                UID = result.CandidateDto.UID,
-                Constituency = result.CandidateDto.Constituency,
-                Location = result.CandidateDto.Location,
-                PoliticalAffiliation = result.CandidateDto.PoliticalAffiliation,
-                Phone = result.CandidateDto.Phone,
-                Votes = result.CandidateDto.Votes?.ToList() ?? new List<string>()
-            };
+            return response.CandidateDto;
+
+            //return new Candidate
+            //{
+            //    Name = result.CandidateDto.Name,
+            //    ImageUrl = result.CandidateDto.ImageUrl,
+            //    Sex = result.CandidateDto.Sex,
+            //    DOB = result.CandidateDto.DOB,
+            //    UID = result.CandidateDto.UID,
+            //    Constituency = result.CandidateDto.Constituency,
+            //    Location = result.CandidateDto.Location,
+            //    PoliticalAffiliation = result.CandidateDto.PoliticalAffiliation,
+            //    Phone = result.CandidateDto.Phone,
+            //    Votes = result.CandidateDto.Votes?.ToList() ?? new List<string>()
+            //};
         }
 
         public async Task<bool> ExistsCandidateAsync(string uid)

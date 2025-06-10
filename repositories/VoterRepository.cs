@@ -26,28 +26,36 @@ namespace DVotingBackendApp.repositories
                 _web3.TransactionManager.Account.Address,
                 new Nethereum.Hex.HexTypes.HexBigInteger(900000),
                 null, null,
-                voter.Name, voter.Sex, DateTimeUtils.ToDateString(voter.DOB), voter.UID, voter.Constituency,
+                voter.Name, voter.FatherName, voter.ImageUrl, voter.Sex, voter.DOB, voter.UID, voter.Constituency,
                 voter.Location, voter.Phone);
             return tx.TransactionHash;
         }
 
-        public async Task<Voter> FetchVoterAsync(string uid)
+        public async Task<List<string>> FetchVoterIdsAsync(string constituency)
+        {
+            var function = _contract.GetFunction("getVoterIds");
+            var ids = await function.CallAsync<List<string>>(constituency);
+            return ids;
+        }
+
+        public async Task<VoterDto> FetchVoterAsync(string uid)
         {
             var function = _contract.GetFunction("getVoter");
 
-            var result = await function.CallDeserializingToObjectAsync<VoterOutputDto>(uid);
+            var response = await function.CallDeserializingToObjectAsync<VoterOutputDto>(uid);
 
-
-            return new Voter
-            {
-                Name = result.VoterDto.Name,
-                Sex = result.VoterDto.Gender,
-                DOB = DateTimeUtils.FromDateString(result.VoterDto.Dob),
-                UID = result.VoterDto.Uid,
-                Constituency = result.VoterDto.Constituency,
-                Location = result.VoterDto.Location,
-                Phone = result.VoterDto.PhoneNumber
-            };
+            return response.VoterDto;
+            //return new Voter
+            //{
+            //    Name = result.VoterDto.Name,
+            //    ImageUrl = result.VoterDto.ImageUrl,
+            //    Sex = result.VoterDto.Sex,
+            //    DOB = result.VoterDto.Dob,
+            //    UID = result.VoterDto.Uid,
+            //    Constituency = result.VoterDto.Constituency,
+            //    Location = result.VoterDto.Location,
+            //    Phone = result.VoterDto.PhoneNumber
+            //};
         }
 
         public async Task<bool> CheckVoterValidityAsync(string uid)

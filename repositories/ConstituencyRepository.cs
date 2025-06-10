@@ -29,18 +29,19 @@ namespace DVotingBackendApp.repositories
             return tx.TransactionHash;
         }
 
-        public async Task<List<Constituency>> FetchConstituenciesAsync()
+        public async Task<IEnumerable<ConstituencyDto>> FetchConstituenciesAsync()
         {
             var function = _contract.GetFunction("getConstituencies");
-            var result = await function.CallDeserializingToObjectAsync<ConstituencyListDto>();
+            var response = await function.CallDeserializingToObjectAsync<ConstituencyListDto>();
 
-            return result.Constituencies.Select(dto => new Constituency
-            {
-                StateCode = dto.StateCode,
-                Type = dto.Type,
-                Number = dto.Number,
-                Name = dto.Name
-            }).ToList();
+            return response.Constituencies;
+            //return result.Constituencies.Select(dto => new Constituency
+            //{
+            //    StateCode = dto.StateCode,
+            //    Type = dto.Type,
+            //    Number = dto.Number,
+            //    Name = dto.Name
+            //}).ToList();
         }
 
         public async Task<bool> ExistsConstituencyAsync(string id)

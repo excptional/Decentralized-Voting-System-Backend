@@ -1,4 +1,5 @@
-﻿using DVotingBackendApp.models;
+﻿using DVotingBackendApp.dtos;
+using DVotingBackendApp.models;
 using Microsoft.OpenApi.Any;
 
 namespace DVotingBackendApp.repositories.interfaces
@@ -6,7 +7,8 @@ namespace DVotingBackendApp.repositories.interfaces
     public interface IVoterRepository
     {
         Task<string> RegisterVoterAsync(Voter voter);
-        Task<Voter> FetchVoterAsync(string uid);
+        Task<VoterDto> FetchVoterAsync(string uid);
+        Task<List<string>> FetchVoterIdsAsync(string constituency);
         Task<bool> CheckVoterValidityAsync(string uid);
         Task<bool> ExistsVoterAsync(string uid);
         Task<string> VoteAsync(Vote vote);

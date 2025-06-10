@@ -6,7 +6,7 @@ namespace DVotingBackendApp.repositories.interfaces
     public interface IConstituencyRepository
     {
         Task<string> RegisterConstituencyAsync(Constituency constituency);
-        Task<List<Constituency>> FetchConstituenciesAsync();
+        Task<IEnumerable<ConstituencyDto>> FetchConstituenciesAsync();
         Task<bool> ExistsConstituencyAsync(string id);
     }
 }

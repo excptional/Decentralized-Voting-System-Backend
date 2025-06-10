@@ -1,4 +1,5 @@
-﻿using DVotingBackendApp.models;
+﻿using DVotingBackendApp.dtos;
+using DVotingBackendApp.models;
 
 namespace DVotingBackendApp.repositories.interfaces
 {
@@ -6,7 +7,7 @@ namespace DVotingBackendApp.repositories.interfaces
     {
         Task<string> RegisterCandidateAsync(Candidate candidate);
         Task<List<string>> FetchCandidateIdsAsync(string constituency);
-        Task<Candidate> FetchCandidateAsync(string uid);
+        Task<CandidateDto> FetchCandidateAsync(string uid);
         Task<bool> ExistsCandidateAsync(string uid);
         Task<bool> CheckPartyAvailabilityAsync(string constituency, string politicalAffiliation);
 

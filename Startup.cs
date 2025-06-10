@@ -25,13 +25,24 @@ namespace TaskManagementSystem
             services.AddScoped<IVoterService, VoterService>();
             services.AddScoped<IConstituencyService, ConstituencyService>();
 
-            services.AddControllers();
             services.AddSingleton<BlockchainService>();
 
+            services.AddControllers();
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+            services.AddAutoMapper(typeof(Startup));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -43,6 +54,8 @@ namespace TaskManagementSystem
                 app.UseSwaggerUI();
             }
 
+            app.UseCors("AllowAll");
+
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
@@ -51,5 +64,6 @@ namespace TaskManagementSystem
             });
         }
     }
+
 
 }

@@ -1,7 +1,10 @@
-﻿using DVotingBackendApp.exceptions;
+﻿using AutoMapper;
+using DVotingBackendApp.exceptions;
 using DVotingBackendApp.models;
 using DVotingBackendApp.repositories;
 using DVotingBackendApp.repositories.interfaces;
+using DVotingBackendApp.requests;
+using DVotingBackendApp.responses;
 using DVotingBackendApp.services.interfaces;
 
 namespace DVotingBackendApp.services
@@ -10,40 +13,33 @@ namespace DVotingBackendApp.services
     {
         private readonly ICandidateRepository _candidateRepository;
         private readonly IConstituencyRepository _constituencyRepository;
+        private readonly IMapper _mapper;
 
-        public CandidateService(ICandidateRepository candidateRepository, IConstituencyRepository constituencyRepository)
+        public CandidateService(ICandidateRepository candidateRepository, IConstituencyRepository constituencyRepository, IMapper mapper)
         {
             _candidateRepository = candidateRepository;
             _constituencyRepository = constituencyRepository;
+            _mapper = mapper;
         }
 
-        public async Task<string> RegisterCandidateAsync(Candidate candidate)
+        public async Task<string> RegisterCandidateAsync(CandidateRequest candidateRequest)
         {
-            if (string.IsNullOrWhiteSpace(candidate.Name) ||
-                string.IsNullOrWhiteSpace(candidate.UID) ||
-                string.IsNullOrWhiteSpace(candidate.Sex) ||
-                string.IsNullOrWhiteSpace(candidate.Constituency) ||
-                string.IsNullOrWhiteSpace(candidate.Location) ||
-                string.IsNullOrWhiteSpace(candidate.Phone) ||
-                string.IsNullOrWhiteSpace(candidate.PoliticalAffiliation))
-                throw new InvalidCandidateException("Some required candidate fields are missing. Please check all inputs and try again.");
 
-            if (candidate.DOB == default || candidate.DOB > DateTime.Now)
-                throw new InvalidCandidateException("The provided date of birth is invalid. Please enter a valid DOB.");
-
-            if (await _candidateRepository.ExistsCandidateAsync(candidate.UID))
+            if (await _candidateRepository.ExistsCandidateAsync(candidateRequest.UID))
                 throw new InvalidCandidateException("This candidate is already registered. Duplicate registration is not allowed.");
 
-            if (!await _constituencyRepository.ExistsConstituencyAsync(candidate.Constituency))
+            if (!await _constituencyRepository.ExistsConstituencyAsync(candidateRequest.Constituency))
                 throw new EntityNotFoundException("The specified constituency does not exist. Please enter a valid constituency name.");
 
-            if (!await _candidateRepository.CheckPartyAvailabilityAsync(candidate.Constituency, candidate.PoliticalAffiliation))
+            if (!await _candidateRepository.CheckPartyAvailabilityAsync(candidateRequest.Constituency, candidateRequest.PoliticalAffiliation))
                 throw new InvalidCandidateException("A candidate from this party is already registered in the selected constituency.");
 
-            return await _candidateRepository.RegisterCandidateAsync(candidate);
+            var candiadate = _mapper.Map<Candidate>(candidateRequest);
+
+            return await _candidateRepository.RegisterCandidateAsync(candiadate);
         }
 
-        public async Task<List<Candidate>> FetchCandidatesAsync(string constituency)
+        public async Task<IEnumerable<CandidateResponse>> FetchCandidatesAsync(string constituency)
         {
             if (string.IsNullOrWhiteSpace(constituency))
                 throw new InvalidCandidateException("Constituency name must not be empty.");
@@ -52,25 +48,39 @@ namespace DVotingBackendApp.services
             if (!result.Any())
                 throw new EntityNotFoundException($"No candidates have been registered in the constituency '{constituency}'.");
 
-            var candidates = new List<Candidate>();
+            //var candidates = new List<Candidate>();
 
-            var candidateTasks = result.Select(id => _candidateRepository.FetchCandidateAsync(id));
-            var fetchedCandidates = await Task.WhenAll(candidateTasks);
-            candidates.AddRange(fetchedCandidates);
+            var candidateTasks = result.Select(async id =>
+            {
+                var candidateDto = await _candidateRepository.FetchCandidateAsync(id);
+
+                return _mapper.Map<CandidateResponse>(candidateDto);
+            });
+            var candidates = await Task.WhenAll(candidateTasks);
+
+            //candidates.AddRange(fetchedCandidates);
 
             return candidates;
         }
 
-        public async Task<Candidate> FetchCandidateAsync(string uid)
+        public async Task<CandidateResponse> FetchCandidateAsync(string uid)
         {
             if (string.IsNullOrWhiteSpace(uid))
                 throw new InvalidCandidateException("Candidate UID must not be empty.");
 
-            var candidate = await _candidateRepository.FetchCandidateAsync(uid);
-            if (candidate == null)
-                throw new EntityNotFoundException($"No candidate found with UID '{uid}'.");
+            try
+            {
+                var response = await _candidateRepository.FetchCandidateAsync(uid);
+                var candidate = _mapper.Map<CandidateResponse>(response);
 
-            return candidate;
+                candidate.VoteCount = response.Votes.Count;
+
+                return candidate;
+
+            } catch (Exception)
+            {
+                throw new EntityNotFoundException($"No candidate found with UID '{uid}'.");
+            }
         }
 
     }

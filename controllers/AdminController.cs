@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using DVotingBackendApp.exceptions;
 using DVotingBackendApp.models;
+using DVotingBackendApp.requests;
 using DVotingBackendApp.services.interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,12 +25,12 @@ namespace DVotingBackendApp.controllers
         }
 
         [HttpPost("constituencies")]
-        public async Task<IActionResult> RegisterConstituency([FromBody] Constituency constituency)
+        public async Task<IActionResult> RegisterConstituency([FromBody] ConstituencyRequest constituencyRequest)
         {
             {
                 try
                 {
-                    var tx = await _constituencyService.RegisterConstituencyAsync(constituency);
+                    var tx = await _constituencyService.RegisterConstituencyAsync(constituencyRequest);
                     return StatusCode(201, $"Constituency registered successfully.\nTx Hash: {tx}");
                 }
                 catch (InvalidConstituencyException ex)
@@ -44,12 +45,12 @@ namespace DVotingBackendApp.controllers
         }
 
         [HttpPost("candidates")]
-        public async Task<IActionResult> RegisterCandidate([FromBody] Candidate candidate)
+        public async Task<IActionResult> RegisterCandidate([FromBody] CandidateRequest candidateRequest)
         {
             {
                 try
                 {
-                    var tx = await _candidateService.RegisterCandidateAsync(candidate);
+                    var tx = await _candidateService.RegisterCandidateAsync(candidateRequest);
                     return StatusCode(201, $"Candidate registered successfully.\nTx Hash: {tx}");
                 }
                 catch (InvalidCandidateException ex)
@@ -64,12 +65,12 @@ namespace DVotingBackendApp.controllers
         }
 
         [HttpPost("voters")]
-        public async Task<IActionResult> RegisterVoter([FromBody] Voter voter)
+        public async Task<IActionResult> RegisterVoter([FromBody] VoterRequest voterRequest)
         {
             {
                 try
                 {
-                    var tx = await _voterService.RegisterVoterAsync(voter);
+                    var tx = await _voterService.RegisterVoterAsync(voterRequest);
                     return StatusCode(201, $"Voter registered successfully.\nTx Hash: {tx}");
                 }
                 catch (InvalidVoterException ex)
@@ -125,6 +126,34 @@ namespace DVotingBackendApp.controllers
                     return Ok(candidates);
                 }
                 catch (InvalidCandidateException ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+                catch (EntityNotFoundException ex)
+                {
+                    return NotFound(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(501, ex.Message);
+                }
+            }
+        }
+
+        [HttpGet("{constituency}/voters")]
+        public async Task<IActionResult> FetchVoters(string constituency)
+        {
+            {
+                try
+                {
+                    var voters = await _voterService.FetchVotersAsync(constituency);
+
+                    if (!voters.Any())
+                        return NoContent();
+
+                    return Ok(voters);
+                }
+                catch (InvalidVoterException ex)
                 {
                     return BadRequest(ex.Message);
                 }

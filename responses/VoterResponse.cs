@@ -1,8 +1,6 @@
-﻿using System.Numerics;
-
-namespace DVotingBackendApp.models
+﻿namespace DVotingBackendApp.responses
 {
-    public class Voter
+    public class VoterResponse
     {
         public string Name { get; set; }
         public string FatherName { get; set; }
@@ -13,5 +11,6 @@ namespace DVotingBackendApp.models
         public string Location { get; set; }
         public string Phone { get; set; }
         public string ImageUrl { get; set; }
+        public bool IsVoted { get; set; }
     }
 }
